@@ -8,6 +8,8 @@
 #include "gbufferedimage.h"
 #include "gevents.h"
 #include "math.h" //for sqrt and exp in the optional Gaussian kernel
+#include "random.h"
+
 using namespace std;
 
 static const int    WHITE = 0xFFFFFF;
@@ -15,11 +17,17 @@ static const int    BLACK = 0x000000;
 static const int    GREEN = 0x00FF00;
 static const double PI    = 3.14159265;
 
-void     doFauxtoshop(GWindow &gw, GBufferedImage &img);
-
-bool     openImageFromFilename(GBufferedImage& img, string filename);
+void    doFauxtoshop(GWindow &gw, GBufferedImage &img);
+bool    getImage(GBufferedImage& img, GWindow& gw);
+void	pickFilter(GBufferedImage& img);
+void	doFilter(GBufferedImage& img, int n);
+void	doScatter(Grid<int>& original);
+// void	doEdgeDetection(Grid<int>& original);
+// void	doGreenScreen(Grid<int>& original);
+// void	doCompare(Grid<int>& original);
+bool    openImageFromFilename(GBufferedImage& img, string filename);
 bool 	saveImageToFilename(const GBufferedImage &img, string filename);
-void     getMouseClickLocation(int &row, int &col);
+void    getMouseClickLocation(int &row, int &col);
 
 /* 
  * This main simply declares a GWindow and a GBufferedImage for use
@@ -41,25 +49,24 @@ void doFauxtoshop(GWindow &gw, GBufferedImage &img) {
 
     cout << "Welcome to Fauxtoshop!" << endl;
     
-    while (true) {
-        /* Prompt user for file name */
-        cout << "Enter name of image file to edit (or blank to quit):" << endl;
-        /* Assign the user input to string filename */
-        string filename = GetLine();
-        /* Convert filename to C-string */
-        if (openImageFromFilename(img, filename.c_str())) {
-            break;
-        }
-        cout << "Couldn't open that file. Please try again." << endl;
+    // Prompts user for a file name until a valid image file is entered, then opens image and returns true.
+    // If blank string is entered, returns false.
+    if (!getImage(img, gw)) {
+        return;
     }
 
     cout << "Opening image file, may take a minute..." << endl;
-    /* Resize the GWindow to be the same size as the image */
+
+    // Resize the GWindow to be the same size as the image
     gw.setCanvasSize(img.getWidth(), img.getHeight());
-    /* Add image to GWindow */
+
+    // Add image to GWindow 
     gw.add(&img,0,0);
+    
+    // Prompt user to pick a filter 
+    pickFilter(img);
 
-
+    // Compare to another image 
     // GBufferedImage img2;
     // openImageFromFilename(img2, "beyonce.jpg");
     // img.countDiffPixels(img2);
@@ -69,6 +76,25 @@ void doFauxtoshop(GWindow &gw, GBufferedImage &img) {
     gw.clear();
 }
 
+bool getImage(GBufferedImage& img, GWindow &gw) {
+
+    // Prompt user for image filename and open image. Closes application if blank string is entered.
+    while (true) {
+        string filename = getLine("Enter name of image file to edit (or blank to quit):");
+        // Attempt to open file. Breaks out of the loop if filename is valid. 
+        if (openImageFromFilename(img, filename.c_str())) {
+            break;
+        }
+	// If blank, quit program 
+	if (filename == "") {
+	    cout << "Quitting the application. You may close the console window." << endl;
+	    gw.close();
+	    return false;
+	}
+        cout << "Couldn't open that file. Please try again." << endl;
+    }
+    return true;
+}
 
 /* Attempts to open the image file 'filename'.
  *
@@ -80,6 +106,67 @@ bool openImageFromFilename(GBufferedImage& img, string filename) {
     try { img.load(filename); }
     catch (...) { return false; }
     return true;
+}
+
+/* Asks the user which filter they would like to apply to the image file
+ *
+ */
+void pickFilter(GBufferedImage& img) {
+	int n = getInteger("Which image filter would you like to apply?\n\t1 - Scatter\n\t2 - Edge Detection\n\t3 - \"Green screen\" with another image\n\t4 - Compare image with another image\nYour choice: ");
+    doFilter(img, n);
+}
+
+/* Starts the correct filter function
+ *
+ */
+void doFilter(GBufferedImage& img, int n) {
+    Grid<int> original = img.toGrid();
+    switch(n) {
+        case 1: doScatter(original)
+	//case 2: doEdgeDetection(img);
+	//case 3: doGreenScreen(img);
+	//case 4: doCompare(img);
+	default: break;
+    }
+    img = img.fromGrid(original);
+}
+
+/* Applies the scatter filter to the image
+ *
+ * Prompts user for scatter radius. Iterates through Grid. 
+ */
+void doScatter(Grid<int>& original) {
+    int radius = getInteger("Enter degree of scatter [1 - 100]: ");
+    Grid<int> scattered(original.numRows(), original.numCols());
+    for (int r = 0; r < scattered.numRows(); r++) {
+        for (int c = 0; c < scattered.numCols(); c++) {
+            scattered[r][c] = scattered[getRandCoord(radius, scattered.numRows(), r)][getRandCoord(radius, scattered.numCols(), c)];	
+	}
+    }
+}
+
+/*
+ * Returns a random column or row within the radius of the current column or row.
+ * Will not return a coordinate outside the bounds of the grid.
+ */
+int getRandomCoordinate(int radius, int max, int current) {
+    int low = setLow(radius, current);
+    int high = setHigh(radius, current, max);
+    return randomInteger(low, high);
+}
+
+int setLow(int radius, int n) {
+    if ((n - radius) < 0) {
+        return 0;
+    }
+    return n - radius;
+}
+
+int setHigh(int radius, int n, int max) {
+    if ((n + radius) >= max) {
+        return max;
+    }
+        return n + radius;
 }
 
 /*  Attempts to save the image file to 'filename'.
