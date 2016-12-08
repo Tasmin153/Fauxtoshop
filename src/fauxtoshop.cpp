@@ -25,6 +25,9 @@ void	doScatter(Grid<int>& original);
 // void	doEdgeDetection(Grid<int>& original);
 // void	doGreenScreen(Grid<int>& original);
 // void	doCompare(Grid<int>& original);
+int    getRandCoord(int radius, int max, int current);
+int	setLow(int radius, int n);
+int	setHigh(int radius, int n, int max);
 bool    openImageFromFilename(GBufferedImage& img, string filename);
 bool 	saveImageToFilename(const GBufferedImage &img, string filename);
 void    getMouseClickLocation(int &row, int &col);
@@ -122,13 +125,13 @@ void pickFilter(GBufferedImage& img) {
 void doFilter(GBufferedImage& img, int n) {
     Grid<int> original = img.toGrid();
     switch(n) {
-        case 1: doScatter(original)
+        case 1: doScatter(original);
 	//case 2: doEdgeDetection(img);
 	//case 3: doGreenScreen(img);
 	//case 4: doCompare(img);
 	default: break;
     }
-    img = img.fromGrid(original);
+    img.fromGrid(original);
 }
 
 /* Applies the scatter filter to the image
@@ -140,16 +143,17 @@ void doScatter(Grid<int>& original) {
     Grid<int> scattered(original.numRows(), original.numCols());
     for (int r = 0; r < scattered.numRows(); r++) {
         for (int c = 0; c < scattered.numCols(); c++) {
-            scattered[r][c] = scattered[getRandCoord(radius, scattered.numRows(), r)][getRandCoord(radius, scattered.numCols(), c)];	
+            scattered[r][c] = scattered[getRandCoord(radius, scattered.numRows(), r)][getRandCoord(radius, scattered.numCols(), c)];
 	}
     }
+    original = scattered;
 }
 
 /*
  * Returns a random column or row within the radius of the current column or row.
  * Will not return a coordinate outside the bounds of the grid.
  */
-int getRandomCoordinate(int radius, int max, int current) {
+int getRandCoord(int radius, int max, int current) {
     int low = setLow(radius, current);
     int high = setHigh(radius, current, max);
     return randomInteger(low, high);
