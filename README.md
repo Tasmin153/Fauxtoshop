@@ -1,3 +1,3 @@
 # cs106b-fauxtoshop
 
-A basic "photoshop" lookalike application in C++. Not yet completed.
+A basic Photoshop-esque application in C++. Not yet completed.
