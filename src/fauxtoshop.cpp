@@ -1,6 +1,3 @@
-// This is the CPP file you will edit and turn in.
-// Also remove these comments here and add your own.
-// TODO: rewrite this comment
 
 #include <iostream>
 #include "console.h"
@@ -24,14 +21,9 @@ bool     openImageFromFilename(GBufferedImage& img, string filename);
 bool 	saveImageToFilename(const GBufferedImage &img, string filename);
 void     getMouseClickLocation(int &row, int &col);
 
-/* STARTER CODE FUNCTION - DO NOT EDIT
- *
+/* 
  * This main simply declares a GWindow and a GBufferedImage for use
- * throughout the program. By asking you not to edit this function,
- * we are enforcing that the GWindow have a lifespan that spans the
- * entire duration of execution (trying to have more than one GWindow,
- * and/or GWindow(s) that go in and out of scope, can cause program
- * crashes).
+ * throughout the program.  
  */
 int main() {
     GWindow gw;
@@ -42,23 +34,35 @@ int main() {
     return 0;
 }
 
-/* This is yours to edit. Depending on how you approach your problem
- * decomposition, you will want to rewrite some of these lines, move
- * them inside loops, or move them inside helper functions, etc.
- *
+/*
  * TODO: rewrite this comment.
  */
 void doFauxtoshop(GWindow &gw, GBufferedImage &img) {
 
     cout << "Welcome to Fauxtoshop!" << endl;
-    openImageFromFilename(img, "kitten.jpg");
+    
+    while (true) {
+        /* Prompt user for file name */
+        cout << "Enter name of image file to edit (or blank to quit):" << endl;
+        /* Assign the user input to string filename */
+        string filename = GetLine();
+        /* Convert filename to C-string */
+        if (openImageFromFilename(img, filename.c_str())) {
+            break;
+        }
+        cout << "Couldn't open that file. Please try again." << endl;
+    }
+
+    cout << "Opening image file, may take a minute..." << endl;
+    /* Resize the GWindow to be the same size as the image */
     gw.setCanvasSize(img.getWidth(), img.getHeight());
+    /* Add image to GWindow */
     gw.add(&img,0,0);
 
 
-    GBufferedImage img2;
-    openImageFromFilename(img2, "beyonce.jpg");
-    img.countDiffPixels(img2);
+    // GBufferedImage img2;
+    // openImageFromFilename(img2, "beyonce.jpg");
+    // img.countDiffPixels(img2);
 
     int row, col;
     getMouseClickLocation(row, col);
@@ -66,9 +70,7 @@ void doFauxtoshop(GWindow &gw, GBufferedImage &img) {
 }
 
 
-/* STARTER CODE HELPER FUNCTION - DO NOT EDIT
- *
- * Attempts to open the image file 'filename'.
+/* Attempts to open the image file 'filename'.
  *
  * This function returns true when the image file was successfully
  * opened and the 'img' object now contains that image, otherwise it
@@ -80,9 +82,7 @@ bool openImageFromFilename(GBufferedImage& img, string filename) {
     return true;
 }
 
-/* STARTER CODE HELPER FUNCTION - DO NOT EDIT
- *
- * Attempts to save the image file to 'filename'.
+/*  Attempts to save the image file to 'filename'.
  *
  * This function returns true when the image was successfully saved
  * to the file specified, otherwise it returns false.
@@ -93,8 +93,7 @@ bool saveImageToFilename(const GBufferedImage &img, string filename) {
     return true;
 }
 
-/* STARTER CODE HELPER FUNCTION - DO NOT EDIT
- *
+/* 
  * Waits for a mouse click in the GWindow and reports click location.
  *
  * When this function returns, row and col are set to the row and
