@@ -1,3 +1,3 @@
 # cs106b-fauxtoshop
 
-A basic Photoshop-esque application in C++. Not yet completed.
+A photo-editing application written in C++. Solution to Stanford CS106b assignment 1: WORK IN PROGRESS.
