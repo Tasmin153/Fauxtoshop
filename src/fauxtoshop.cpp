@@ -21,7 +21,7 @@ void    doFauxtoshop(GWindow &gw, GBufferedImage &img);
 bool    getImage(GBufferedImage& img, GWindow& gw);
 void	pickFilter(GBufferedImage& img);
 void	doFilter(GBufferedImage& img, int n);
-void	doScatter(Grid<int>& original);
+Grid<int> doScatter(Grid<int>& original);
 // void	doEdgeDetection(Grid<int>& original);
 // void	doGreenScreen(Grid<int>& original);
 // void	doCompare(Grid<int>& original);
@@ -69,14 +69,16 @@ void doFauxtoshop(GWindow &gw, GBufferedImage &img) {
     // Prompt user to pick a filter 
     pickFilter(img);
 
+    // Ask user if they would like to save the filtered image
+    saveImageToFilename(img, filename)
     // Compare to another image 
     // GBufferedImage img2;
     // openImageFromFilename(img2, "beyonce.jpg");
     // img.countDiffPixels(img2);
 
-    int row, col;
-    getMouseClickLocation(row, col);
-    gw.clear();
+    // int row, col;
+    // getMouseClickLocation(row, col);
+    // gw.clear();
 }
 
 bool getImage(GBufferedImage& img, GWindow &gw) {
@@ -124,29 +126,30 @@ void pickFilter(GBufferedImage& img) {
  */
 void doFilter(GBufferedImage& img, int n) {
     Grid<int> original = img.toGrid();
+    Grid<int> filtered;
     switch(n) {
-        case 1: doScatter(original);
+        case 1: filtered = doScatter(original);
 	//case 2: doEdgeDetection(img);
 	//case 3: doGreenScreen(img);
 	//case 4: doCompare(img);
 	default: break;
     }
-    img.fromGrid(original);
+    img.fromGrid(filtered);
 }
 
 /* Applies the scatter filter to the image
  *
  * Prompts user for scatter radius. Iterates through Grid. 
  */
-void doScatter(Grid<int>& original) {
+Grid<int> doScatter(Grid<int>& original) {
     int radius = getInteger("Enter degree of scatter [1 - 100]: ");
     Grid<int> scattered(original.numRows(), original.numCols());
     for (int r = 0; r < scattered.numRows(); r++) {
         for (int c = 0; c < scattered.numCols(); c++) {
-            scattered[r][c] = scattered[getRandCoord(radius, scattered.numRows(), r)][getRandCoord(radius, scattered.numCols(), c)];
+            scattered[r][c] = original[getRandCoord(radius, scattered.numRows(), r)][getRandCoord(radius, scattered.numCols(), c)];
 	}
     }
-    original = scattered;
+    return scattered;
 }
 
 /*
@@ -168,7 +171,7 @@ int setLow(int radius, int n) {
 
 int setHigh(int radius, int n, int max) {
     if ((n + radius) >= max) {
-        return max;
+        return max - 1;
     }
         return n + radius;
 }
