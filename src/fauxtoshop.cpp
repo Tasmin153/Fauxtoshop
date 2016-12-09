@@ -50,35 +50,46 @@ int main() {
  */
 void doFauxtoshop(GWindow &gw, GBufferedImage &img) {
 
-    cout << "Welcome to Fauxtoshop!" << endl;
-    
-    // Prompts user for a file name until a valid image file is entered, then opens image and returns true.
-    // If blank string is entered, returns false.
-    if (!getImage(img, gw)) {
-        return;
+    while (true) {
+        cout << "Welcome to Fauxtoshop!" << endl;
+        
+        // Prompts user for a file name until a valid image file is entered, then opens image and returns true.
+        // If blank string is entered, returns false.
+        if (!getImage(img, gw)) {
+            return;
+        }
+
+        cout << "Opening image file, may take a minute..." << endl;
+
+        // Resize the GWindow to be the same size as the image
+        gw.setCanvasSize(img.getWidth(), img.getHeight());
+
+        // Add image to GWindow 
+        gw.add(&img,0,0);
+        
+        // Prompt user to pick a filter 
+        pickFilter(img);
+
+        // Ask user if they would like to save the filtered image
+        while (true) {
+            string filename = getLine("Enter filename to save image (or blank to skip saving): ");
+            if (filename == "" || saveImageToFilename(img, filename.c_str())) {
+                   break;
+           }
+        }
+        // Clear the screen
+        gw.clear();
+	cout << "\n" <<endl;
+        
+        // Compare to another image 
+        // GBufferedImage img2;
+        // openImageFromFilename(img2, "beyonce.jpg");
+        // img.countDiffPixels(img2);
+
+        // int row, col;
+        // getMouseClickLocation(row, col);
+        // gw.clear();
     }
-
-    cout << "Opening image file, may take a minute..." << endl;
-
-    // Resize the GWindow to be the same size as the image
-    gw.setCanvasSize(img.getWidth(), img.getHeight());
-
-    // Add image to GWindow 
-    gw.add(&img,0,0);
-    
-    // Prompt user to pick a filter 
-    pickFilter(img);
-
-    // Ask user if they would like to save the filtered image
-    saveImageToFilename(img, filename)
-    // Compare to another image 
-    // GBufferedImage img2;
-    // openImageFromFilename(img2, "beyonce.jpg");
-    // img.countDiffPixels(img2);
-
-    // int row, col;
-    // getMouseClickLocation(row, col);
-    // gw.clear();
 }
 
 bool getImage(GBufferedImage& img, GWindow &gw) {
@@ -184,6 +195,7 @@ int setHigh(int radius, int n, int max) {
 bool saveImageToFilename(const GBufferedImage &img, string filename) {
     try { img.save(filename); }
     catch (...) { return false; }
+    cout << "Image saved." << endl;
     return true;
 }
 
