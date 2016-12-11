@@ -17,20 +17,24 @@ static const int    BLACK = 0x000000;
 static const int    GREEN = 0x00FF00;
 static const double PI    = 3.14159265;
 
-void    doFauxtoshop(GWindow &gw, GBufferedImage &img);
-bool    getImage(GBufferedImage& img, GWindow& gw);
-void	pickFilter(GBufferedImage& img);
+void doFauxtoshop(GWindow &gw, GBufferedImage &img);
+bool getImage(GBufferedImage& img, GWindow& gw);
+void pickFilter(GBufferedImage& img);
 void	doFilter(GBufferedImage& img, int n);
+
 Grid<int> doScatter(Grid<int>& original);
-// void	doEdgeDetection(Grid<int>& original);
+Grid<int> doEdgeDetection(Grid<int>& original);
 // void	doGreenScreen(Grid<int>& original);
 // void	doCompare(Grid<int>& original);
-int    getRandCoord(int radius, int max, int current);
+int assignEdgeDetectionColors(int threshold, Grid<int>& original, int r, int c);
+int diffBtwnPixels(int pixelA, int pixelB);
+int getThreshold();
+int getRandCoord(int radius, int max, int current);
 int	setLow(int radius, int n);
 int	setHigh(int radius, int n, int max);
-bool    openImageFromFilename(GBufferedImage& img, string filename);
-bool 	saveImageToFilename(const GBufferedImage &img, string filename);
-void    getMouseClickLocation(int &row, int &col);
+bool openImageFromFilename(GBufferedImage& img, string filename);
+bool saveImageToFilename(const GBufferedImage &img, string filename);
+void getMouseClickLocation(int &row, int &col);
 
 /* 
  * This main simply declares a GWindow and a GBufferedImage for use
@@ -140,7 +144,9 @@ void doFilter(GBufferedImage& img, int n) {
     Grid<int> filtered;
     switch(n) {
         case 1: filtered = doScatter(original);
-	//case 2: doEdgeDetection(img);
+                break;
+        case 2: filtered = doEdgeDetection(original);
+                break;
 	//case 3: doGreenScreen(img);
 	//case 4: doCompare(img);
 	default: break;
@@ -186,6 +192,66 @@ int setHigh(int radius, int n, int max) {
     }
         return n + radius;
 }
+
+ /*
+ * Returns a Grid<int> with the edge detection filter applied to the Grid<int> argument passed in.
+ */
+Grid<int> doEdgeDetection(Grid<int>& original) {
+    int threshold = getThreshold();
+    Grid<int> edged(original.numRows(), original.numCols());
+    // Loop through each pixel in the grid
+    for (int r = 0; r < edged.numRows(); r++) {
+        for (int c = 0; c < edged.numCols(); c++) {
+            edged[r][c] = assignEdgeDetectionColors(threshold, original, r, c);
+        }
+    }
+    return edged;
+}
+
+/* 
+ * Returns black if the difference between the pixel and its neighbors
+ * is greater than the threshold. If not, returns white.
+ */
+int assignEdgeDetectionColors(int threshold, Grid<int>& original, int r, int c) {
+    int pixel = original[r][c];
+    int neighborPixel; 
+    for (int row = r - 1; row <= r + 1; row++) {
+        for (int col = c - 1; col <= c + 1; col++) {
+            if (original.inBounds(row, col)) {
+                neighborPixel = original[row][col];
+                if (diffBtwnPixels(pixel, neighborPixel) > threshold) {
+                    return BLACK;
+                }
+            }
+        }
+    }
+    return WHITE;
+}
+
+
+// Returns the max difference between pairs of RGB values.
+int diffBtwnPixels(int pixelA, int pixelB) {
+    int redA, greenA, blueA, redB, greenB, blueB;
+    GBufferedImage::getRedGreenBlue(pixelA, redA, greenA, blueA);
+    GBufferedImage::getRedGreenBlue(pixelB, redB, greenB, blueB);
+
+    int maxDiff = abs(redA - redB);
+    maxDiff = max(abs(greenA - greenB), maxDiff);
+    maxDiff = max(abs(blueA - blueB), maxDiff);
+    return maxDiff;
+}
+
+// Prompts the user for a positive, nonzero integer until it is input. Returns the integer.
+int getThreshold() {
+    int threshold;
+    while (true) {
+        threshold = getInteger("Enter threshold for edge detection: ");
+        if (threshold >= 0) {
+            break;
+        }
+    }
+    return threshold;
+} 
 
 /*  Attempts to save the image file to 'filename'.
  *
