@@ -18,21 +18,22 @@ static const int    GREEN = 0x00FF00;
 static const double PI    = 3.14159265;
 
 void doFauxtoshop(GWindow &gw, GBufferedImage &img);
-bool getImage(GBufferedImage& img, GWindow& gw);
+bool getImage(GBufferedImage &img, GWindow &gw);
 void pickFilter(GBufferedImage& img);
-void	doFilter(GBufferedImage& img, int n);
+void doFilter(GBufferedImage &img, int n);
+bool openImage(GWindow &gw, GBufferedImage &img);
 
-Grid<int> doScatter(Grid<int>& original);
-Grid<int> doEdgeDetection(Grid<int>& original);
+Grid<int> doScatter(Grid<int> &original);
+Grid<int> doEdgeDetection(Grid<int> &original);
 // void	doGreenScreen(Grid<int>& original);
 // void	doCompare(Grid<int>& original);
-int assignEdgeDetectionColors(int threshold, Grid<int>& original, int r, int c);
+int assignEdgeDetectionColors(int threshold, Grid<int> &original, int r, int c);
 int diffBtwnPixels(int pixelA, int pixelB);
 int getThreshold();
 int getRandCoord(int radius, int max, int current);
 int	setLow(int radius, int n);
 int	setHigh(int radius, int n, int max);
-bool openImageFromFilename(GBufferedImage& img, string filename);
+bool openImageFromFilename(GBufferedImage &img, string filename);
 bool saveImageToFilename(const GBufferedImage &img, string filename);
 void getMouseClickLocation(int &row, int &col);
 
@@ -56,34 +57,21 @@ void doFauxtoshop(GWindow &gw, GBufferedImage &img) {
 
     while (true) {
         cout << "Welcome to Fauxtoshop!" << endl;
-        
-        // Prompts user for a file name until a valid image file is entered, then opens image and returns true.
-        // If blank string is entered, returns false.
-        if (!getImage(img, gw)) {
-            return;
+        if (!openImage(gw, img)) { // Opens image file. If user enters blank string, quits app.
+            return; 
         }
-
-        cout << "Opening image file, may take a minute..." << endl;
-
-        // Resize the GWindow to be the same size as the image
-        gw.setCanvasSize(img.getWidth(), img.getHeight());
-
-        // Add image to GWindow 
-        gw.add(&img,0,0);
         
-        // Prompt user to pick a filter 
-        pickFilter(img);
+        pickFilter(img); // Prompts user to pick a filter
 
-        // Ask user if they would like to save the filtered image
-        while (true) {
+        while (true) { // Asks user if they would like to save image
             string filename = getLine("Enter filename to save image (or blank to skip saving): ");
             if (filename == "" || saveImageToFilename(img, filename.c_str())) {
                    break;
            }
         }
-        // Clear the screen
-        gw.clear();
-	cout << "\n" <<endl;
+
+        gw.clear(); // Clears GWindow
+        cout << "\n" <<endl;
         
         // Compare to another image 
         // GBufferedImage img2;
@@ -96,16 +84,37 @@ void doFauxtoshop(GWindow &gw, GBufferedImage &img) {
     }
 }
 
+/* 
+ * Opens image and adds to GWindow.
+ * Returns false if user enters blank line when prompted for filename.
+ */
+bool openImage(GWindow &gw, GBufferedImage &img) {
+
+        if (!getImage(img, gw)) {
+            return false;
+        }
+
+        cout << "Opening image file, may take a minute..." << endl;
+
+        gw.setCanvasSize(img.getWidth(), img.getHeight()); // Resize GWindow to be same size as image
+     
+        gw.add(&img,0,0); // Add image to GWindow
+        return true;
+}
+
+/*
+ * Prompt user for image filename and open image. Closes application if blank string is entered.
+ * Return true if image is opened, return false if blank string entered.
+ */
 bool getImage(GBufferedImage& img, GWindow &gw) {
 
-    // Prompt user for image filename and open image. Closes application if blank string is entered.
     while (true) {
         string filename = getLine("Enter name of image file to edit (or blank to quit):");
         // Attempt to open file. Breaks out of the loop if filename is valid. 
         if (openImageFromFilename(img, filename.c_str())) {
             break;
         }
-	// If blank, quit program 
+        
 	if (filename == "") {
 	    cout << "Quitting the application. You may close the console window." << endl;
 	    gw.close();
@@ -128,17 +137,20 @@ bool openImageFromFilename(GBufferedImage& img, string filename) {
     return true;
 }
 
-/* Asks the user which filter they would like to apply to the image file
- *
- */
+/* Asks the user which filter they would like to apply to the image file */
 void pickFilter(GBufferedImage& img) {
-	int n = getInteger("Which image filter would you like to apply?\n\t1 - Scatter\n\t2 - Edge Detection\n\t3 - \"Green screen\" with another image\n\t4 - Compare image with another image\nYour choice: ");
+    int n;
+	while (true) {
+        n = getInteger("Which image filter would you like to apply?\n\t1 - Scatter\n\t2 - Edge Detection\n\t3 - \"Green screen\" with another image\n\t4 - Compare image with another image\nYour choice: ");
+        if (n > 0 && n <= 4) {
+                break; // Break out of loop when user enters a valid number
+        }
+        cout << "You entered an invalid number. Let's try this again." << endl;
+    }
     doFilter(img, n);
 }
 
-/* Starts the correct filter function
- *
- */
+/* Starts the correct filter function */
 void doFilter(GBufferedImage& img, int n) {
     Grid<int> original = img.toGrid();
     Grid<int> filtered;
@@ -149,13 +161,13 @@ void doFilter(GBufferedImage& img, int n) {
                 break;
 	//case 3: doGreenScreen(img);
 	//case 4: doCompare(img);
-	default: break;
+        default: cout << "You entered an invalid number" << endl;
+                 break;
     }
     img.fromGrid(filtered);
 }
 
-/* Applies the scatter filter to the image
- *
+/* Applies the scatter filter to the image.
  * Prompts user for scatter radius. Iterates through Grid. 
  */
 Grid<int> doScatter(Grid<int>& original) {
@@ -179,6 +191,7 @@ int getRandCoord(int radius, int max, int current) {
     return randomInteger(low, high);
 }
 
+/* Sets the lower radius boundary so that it stays inbounds */
 int setLow(int radius, int n) {
     if ((n - radius) < 0) {
         return 0;
@@ -186,6 +199,7 @@ int setLow(int radius, int n) {
     return n - radius;
 }
 
+/* Sets upper radius boundary so that it stays inbounds */
 int setHigh(int radius, int n, int max) {
     if ((n + radius) >= max) {
         return max - 1;
@@ -193,9 +207,7 @@ int setHigh(int radius, int n, int max) {
         return n + radius;
 }
 
- /*
- * Returns a Grid<int> with the edge detection filter applied to the Grid<int> argument passed in.
- */
+/* Returns a Grid<int> with the edge detection filter applied to the Grid<int> argument passed in. */
 Grid<int> doEdgeDetection(Grid<int>& original) {
     int threshold = getThreshold();
     Grid<int> edged(original.numRows(), original.numCols());
