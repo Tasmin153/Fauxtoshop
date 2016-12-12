@@ -25,11 +25,12 @@ bool openImage(GWindow &gw, GBufferedImage &img);
 
 Grid<int> doScatter(Grid<int> &original);
 Grid<int> doEdgeDetection(Grid<int> &original);
-// void	doGreenScreen(Grid<int>& original);
+Grid<int> doGreenScreen(Grid<int> &original);
 // void	doCompare(Grid<int>& original);
+void getStickerImg(GBufferedImage &img);
 int assignEdgeDetectionColors(int threshold, Grid<int> &original, int r, int c);
 int diffBtwnPixels(int pixelA, int pixelB);
-int getThreshold();
+int getThreshold(string prompt);
 int getRandCoord(int radius, int max, int current);
 int	setLow(int radius, int n);
 int	setHigh(int radius, int n, int max);
@@ -57,7 +58,7 @@ void doFauxtoshop(GWindow &gw, GBufferedImage &img) {
 
     while (true) {
         cout << "Welcome to Fauxtoshop!" << endl;
-        if (!openImage(gw, img)) { // Opens image file. If user enters blank string, quits app.
+        if (!openImage(gw, img)) { // Opens and displays image file. If user enters blank string, quits app.
             return; 
         }
         
@@ -106,7 +107,7 @@ bool openImage(GWindow &gw, GBufferedImage &img) {
  * Prompt user for image filename and open image. Closes application if blank string is entered.
  * Return true if image is opened, return false if blank string entered.
  */
-bool getImage(GBufferedImage& img, GWindow &gw) {
+bool getImage(GBufferedImage &img, GWindow &gw) {
 
     while (true) {
         string filename = getLine("Enter name of image file to edit (or blank to quit):");
@@ -159,7 +160,8 @@ void doFilter(GBufferedImage& img, int n) {
                 break;
         case 2: filtered = doEdgeDetection(original);
                 break;
-	//case 3: doGreenScreen(img);
+        case 3: doGreenScreen(original);
+                break;
 	//case 4: doCompare(img);
         default: cout << "You entered an invalid number" << endl;
                  break;
@@ -209,7 +211,7 @@ int setHigh(int radius, int n, int max) {
 
 /* Returns a Grid<int> with the edge detection filter applied to the Grid<int> argument passed in. */
 Grid<int> doEdgeDetection(Grid<int>& original) {
-    int threshold = getThreshold();
+    int threshold = getThreshold("Enter threshold for edge detection: ");
     Grid<int> edged(original.numRows(), original.numCols());
     // Loop through each pixel in the grid
     for (int r = 0; r < edged.numRows(); r++) {
@@ -247,23 +249,69 @@ int diffBtwnPixels(int pixelA, int pixelB) {
     GBufferedImage::getRedGreenBlue(pixelA, redA, greenA, blueA);
     GBufferedImage::getRedGreenBlue(pixelB, redB, greenB, blueB);
 
-    int maxDiff = abs(redA - redB);
-    maxDiff = max(abs(greenA - greenB), maxDiff);
-    maxDiff = max(abs(blueA - blueB), maxDiff);
-    return maxDiff;
+    int diffA = abs(redA - redB);
+    int diffB = abs(greenA - greenB); 
+    int diffC = abs(blueA - blueB);
+
+    return max(max(diffA, diffB), diffC);
 }
 
 // Prompts the user for a positive, nonzero integer until it is input. Returns the integer.
-int getThreshold() {
+int getThreshold(string prompt) {
     int threshold;
     while (true) {
-        threshold = getInteger("Enter threshold for edge detection: ");
+        threshold = getInteger(prompt);
         if (threshold >= 0) {
             break;
         }
     }
+
     return threshold;
 } 
+
+Grid<int> doGreenScreen(Grid<int>& original) {
+    Grid<int> greenscreened(original.numRows(), original.numCols());
+    GBufferedImage sticker;
+    int stickerRow;
+    int stickerCol;
+    
+    cout << "Now choose another file to add to your background image" << endl;
+
+    getStickerImg(sticker);
+
+    int threshold = getThreshold("Now choose a tolerance threshold: ");
+    getStickerLocation(stickerRow, stickerCol);
+    overlaySticker(original, sticker, threshold);
+
+    return greenscreened; 
+}
+
+/* Prompts the user to enter an image filename. If valid, assigns image to img.
+ * Continues to prompt in a loop until valid filename entered. */
+void getStickerImg(GBufferedImage &img) {
+    while (true) {
+        string filename = getLine("Enter name of image file to open: ");
+        // Attempt to open file. Breaks out of the loop if filename is valid. 
+        if (openImageFromFilename(img, filename.c_str())) {
+            break;
+        }
+        cout << "Couldn't open that file. Please try again." << endl;
+    }
+}
+
+void getStickerLocation(int &row, int &col) {
+
+}
+
+
+/* Overlays the sticker image on the original background image.
+ * Assigns the filtered Grid<int> greenscreened the pixels of the new hybrid image. 
+ * Ignores pixels on the sticker that fall within the green threshold.
+ */
+
+void overlaySticker(Grid<int> &original, Grid<int> &greenscreened, Grid<int> &sticker, int threshold, int row, int col) {
+    
+}
 
 /*  Attempts to save the image file to 'filename'.
  *
