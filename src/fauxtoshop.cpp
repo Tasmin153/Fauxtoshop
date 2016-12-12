@@ -28,12 +28,16 @@ Grid<int> doEdgeDetection(Grid<int> &original);
 Grid<int> doGreenScreen(Grid<int> &original);
 // void	doCompare(Grid<int>& original);
 void getStickerImg(GBufferedImage &img);
+void getStickerLocation(Grid<int> &original, int &row, int &col);
 int assignEdgeDetectionColors(int threshold, Grid<int> &original, int r, int c);
 int diffBtwnPixels(int pixelA, int pixelB);
 int getThreshold(string prompt);
 int getRandCoord(int radius, int max, int current);
 int	setLow(int radius, int n);
 int	setHigh(int radius, int n, int max);
+
+bool convertStringToInts(Grid<int> &original, string str, int &row, int &col);
+
 bool openImageFromFilename(GBufferedImage &img, string filename);
 bool saveImageToFilename(const GBufferedImage &img, string filename);
 void getMouseClickLocation(int &row, int &col);
@@ -79,9 +83,6 @@ void doFauxtoshop(GWindow &gw, GBufferedImage &img) {
         // openImageFromFilename(img2, "beyonce.jpg");
         // img.countDiffPixels(img2);
 
-        // int row, col;
-        // getMouseClickLocation(row, col);
-        // gw.clear();
     }
 }
 
@@ -280,8 +281,8 @@ Grid<int> doGreenScreen(Grid<int>& original) {
     getStickerImg(sticker);
 
     int threshold = getThreshold("Now choose a tolerance threshold: ");
-    getStickerLocation(stickerRow, stickerCol);
-    overlaySticker(original, sticker, threshold);
+    getStickerLocation(original, stickerRow, stickerCol);
+    //overlaySticker(original, sticker, threshold);
 
     return greenscreened; 
 }
@@ -293,25 +294,62 @@ void getStickerImg(GBufferedImage &img) {
         string filename = getLine("Enter name of image file to open: ");
         // Attempt to open file. Breaks out of the loop if filename is valid. 
         if (openImageFromFilename(img, filename.c_str())) {
+            cout << "Opening image file. This may take a minute..." << endl;
             break;
         }
         cout << "Couldn't open that file. Please try again." << endl;
     }
 }
 
-void getStickerLocation(int &row, int &col) {
-
+/* Prompts user to enter the desired location for the sticker image.
+ * If blank string is entered, allows the user to set the location with the mouse.
+ */
+void getStickerLocation(Grid<int> &original, int &row, int &col) {
+    while (true) {
+        string location = getLine("Enter location to place image as \"(row,col)\" (or blank to use mouse): ");
+        if (location == "") {
+            getMouseClickLocation(row, col);
+            break;
+        } else {
+            if (convertStringToInts(original, location, row, col)) {
+                break;
+            }
+            cout << "Invalid entry. Make sure your entry is in bounds and in the correct format: \"(row,col)\"." << endl;
+        }
+    }
 }
 
+/* Converts the location string input "(col,row)" into two ints, if valid.
+ * Returns true if valid, assigning row and col the values. Else returns false.
+ */
+bool convertStringToInts(Grid<int> &original, string str, int &row, int &col) {
+   int indexOfComma = stringIndexOf(str, ","); // Find index of the comma
+   int rowLen = indexOfComma - stringIndexOf(str, "(") -1; 
+   int colLen = stringIndexOf(str, ")") - indexOfComma - 1;
+   string rowStr = str.substr(1, rowLen); 
+   string colStr = str.substr(indexOfComma + 1, colLen);
+
+   cout << rowStr << endl; // For debugging
+   cout << colStr << endl;
+   if (stringIsInteger(rowStr) && stringIsInteger(colStr)) { // If substrings valid, convert to integers
+       row = stringToInteger(rowStr);
+       col = stringToInteger(colStr);
+           if (original.inBounds(row, col)) {
+               return true;
+           }
+   }
+   
+   return false;
+}
 
 /* Overlays the sticker image on the original background image.
  * Assigns the filtered Grid<int> greenscreened the pixels of the new hybrid image. 
  * Ignores pixels on the sticker that fall within the green threshold.
  */
 
-void overlaySticker(Grid<int> &original, Grid<int> &greenscreened, Grid<int> &sticker, int threshold, int row, int col) {
-    
-}
+// void overlaySticker(Grid<int> &original, Grid<int> &greenscreened, Grid<int> &sticker, int threshold, int row, int col) {
+//     
+// }
 
 /*  Attempts to save the image file to 'filename'.
  *
