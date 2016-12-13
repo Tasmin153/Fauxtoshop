@@ -29,6 +29,9 @@ Grid<int> doGreenScreen(Grid<int> &original);
 // void	doCompare(Grid<int>& original);
 void getStickerImg(GBufferedImage &img);
 void getStickerLocation(Grid<int> &original, int &row, int &col);
+bool isWithinStickerBounds(int stickerSize, int boundary, int row);
+void overlaySticker(Grid<int> &background, Grid<int> &greenscreened, Grid<int> &sticker, int threshold, int stickerOriginX, int stickerOriginY);
+bool isOutsideGreenThreshold(int pixel, int threshold);
 int assignEdgeDetectionColors(int threshold, Grid<int> &original, int r, int c);
 int diffBtwnPixels(int pixelA, int pixelB);
 int getThreshold(string prompt);
@@ -282,7 +285,7 @@ Grid<int> doGreenScreen(Grid<int>& original) {
     Grid<int> stickerGrid = sticker.toGrid(); // Convert sticker image to Grid<int>
     int threshold = getThreshold("Now choose a tolerance threshold: ");
     getStickerLocation(original, stickerRow, stickerCol);
-    //overlaySticker(original, greenscreened, stickerGrid, threshold, stickerRow, stickerCol);
+    overlaySticker(original, greenscreened, stickerGrid, threshold, stickerRow, stickerCol);
 
     return greenscreened; 
 }
@@ -356,8 +359,18 @@ void overlaySticker(Grid<int> &background, Grid<int> &greenscreened, Grid<int> &
     for (int gsRow = 0; gsRow < greenscreened.numRows(); gsRow++) {
         for (int gsCol = 0; gsCol < greenscreened.numCols(); gsCol++) {
             if (isWithinStickerBounds(sticker.numRows(), stickerOriginX, gsRow) && isWithinStickerBounds(sticker.numCols(), stickerOriginY, gsCol)) {
-                
+                if (isOutsideGreenThreshold(sticker[sRow][sCol], threshold)) { // if sticker pixel falls outside threshold, add sticker img pixel
+                        greenscreened[gsRow][gsCol] = sticker[sRow][sCol];
+                } else {
+                    greenscreened[gsRow][gsCol] = background[gsRow][gsCol]; // if sticker pixel is within green threshold, add background img pixel
+                }
+                sCol++;
+            } else {
+                greenscreened[gsRow][gsCol] = background[gsRow][gsCol]; // if outside bounds of sticker position, add background img pixel
             }
+        }
+        if (isWithinStickerBounds(sticker.numRows(), stickerOriginX, gsRow)) { // If adding pixels from the sticker grid, increment sRow to loop
+                sRow++;
         }
     } 
 }
@@ -365,6 +378,24 @@ void overlaySticker(Grid<int> &background, Grid<int> &greenscreened, Grid<int> &
 /* Returns true if the row or col is within the bounds of where the sticker is to be overlaid */
 bool isWithinStickerBounds(int stickerSize, int boundary, int row) {
     if (row >= boundary && row < stickerSize) {
+        return true;
+    }
+    return false;
+}
+
+/* Returns true if the pixel's shade of green falls outside of the threshold
+ *
+ * Compares the pixel's green values to the const GREEN green value.
+ * If difference is greater than threshold, returns true. Else returns false
+ */
+bool isOutsideGreenThreshold(int pixel, int threshold) {
+
+    int redA, greenA, blueA, redB, greenB, blueB;
+    GBufferedImage::getRedGreenBlue(pixel, redA, greenA, blueA);
+    GBufferedImage::getRedGreenBlue(GREEN, redB, greenB, blueB);
+
+    int diff = abs(greenA - greenB);
+    if (diff > threshold) {
         return true;
     }
     return false;
