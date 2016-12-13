@@ -278,14 +278,17 @@ Grid<int> doGreenScreen(Grid<int>& original) {
     
     cout << "Now choose another file to add to your background image" << endl;
 
-    getStickerImg(sticker);
-
+    getStickerImg(sticker); // Open the file input by the user
+    Grid<int> stickerGrid = sticker.toGrid(); // Convert sticker image to Grid<int>
     int threshold = getThreshold("Now choose a tolerance threshold: ");
     getStickerLocation(original, stickerRow, stickerCol);
-    //overlaySticker(original, sticker, threshold);
+    //overlaySticker(original, greenscreened, stickerGrid, threshold, stickerRow, stickerCol);
 
     return greenscreened; 
 }
+
+/* Convert image to Grid<int> */
+
 
 /* Prompts the user to enter an image filename. If valid, assigns image to img.
  * Continues to prompt in a loop until valid filename entered. */
@@ -347,9 +350,25 @@ bool convertStringToInts(Grid<int> &original, string str, int &row, int &col) {
  * Ignores pixels on the sticker that fall within the green threshold.
  */
 
-// void overlaySticker(Grid<int> &original, Grid<int> &greenscreened, Grid<int> &sticker, int threshold, int row, int col) {
-//     
-// }
+void overlaySticker(Grid<int> &background, Grid<int> &greenscreened, Grid<int> &sticker, int threshold, int stickerOriginX, int stickerOriginY) {
+    int sRow = 0; // Initialize vars to keep track of the sticker grid's row and col as we loop through
+    int sCol = 0;
+    for (int gsRow = 0; gsRow < greenscreened.numRows(); gsRow++) {
+        for (int gsCol = 0; gsCol < greenscreened.numCols(); gsCol++) {
+            if (isWithinStickerBounds(sticker.numRows(), stickerOriginX, gsRow) && isWithinStickerBounds(sticker.numCols(), stickerOriginY, gsCol)) {
+                
+            }
+        }
+    } 
+}
+
+/* Returns true if the row or col is within the bounds of where the sticker is to be overlaid */
+bool isWithinStickerBounds(int stickerSize, int boundary, int row) {
+    if (row >= boundary && row < stickerSize) {
+        return true;
+    }
+    return false;
+}
 
 /*  Attempts to save the image file to 'filename'.
  *
