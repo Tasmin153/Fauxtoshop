@@ -117,6 +117,7 @@ bool getImage(GBufferedImage &img, GWindow &gw) {
         string filename = getLine("Enter name of image file to edit (or blank to quit):");
         // Attempt to open file. Breaks out of the loop if filename is valid. 
         if (openImageFromFilename(img, filename.c_str())) {
+
             break;
         }
         
@@ -164,7 +165,7 @@ void doFilter(GBufferedImage& img, int n) {
                 break;
         case 2: filtered = doEdgeDetection(original);
                 break;
-        case 3: doGreenScreen(original);
+        case 3: filtered = doGreenScreen(original);
                 break;
 	//case 4: doCompare(img);
         default: cout << "You entered an invalid number" << endl;
@@ -337,8 +338,6 @@ bool convertStringToInts(Grid<int> &original, string str, int &row, int &col) {
    string rowStr = str.substr(1, rowLen); 
    string colStr = str.substr(indexOfComma + 1, colLen);
 
-   cout << rowStr << endl; // For debugging
-   cout << colStr << endl;
    if (stringIsInteger(rowStr) && stringIsInteger(colStr)) { // If substrings valid, convert to integers
        row = stringToInteger(rowStr);
        col = stringToInteger(colStr);
@@ -355,31 +354,31 @@ bool convertStringToInts(Grid<int> &original, string str, int &row, int &col) {
  * Ignores pixels on the sticker that fall within the green threshold.
  */
 
-void overlaySticker(Grid<int> &background, Grid<int> &greenscreened, Grid<int> &sticker, int threshold, int stickerOriginX, int stickerOriginY) {
-    int sRow = 0; // Initialize vars to keep track of the sticker grid's row and col as we loop through
-    int sCol = 0;
-    for (int gsRow = 0; gsRow < greenscreened.numRows(); gsRow++) {
-        for (int gsCol = 0; gsCol < greenscreened.numCols(); gsCol++) {
-            if (isWithinStickerBounds(sticker.numRows(), stickerOriginX, gsRow) && isWithinStickerBounds(sticker.numCols(), stickerOriginY, gsCol)) {
+void overlaySticker(Grid<int> &background, Grid<int> &greenscreened, Grid<int> &sticker, int threshold, int stickerOriginRow, int stickerOriginCol) {
+    int sRow = 0; // Sticker row
+    for (int bgRow = 0; bgRow < background.numRows(); bgRow++) {
+        int sCol = 0; // Sticker column
+        for (int bgCol = 0; bgCol < background.numCols(); bgCol++) {
+            if (isWithinStickerBounds(sticker.numRows(), stickerOriginRow, bgRow) && isWithinStickerBounds(sticker.numCols(), stickerOriginCol, bgCol)) {
                 if (isOutsideGreenThreshold(sticker[sRow][sCol], threshold)) { // if sticker pixel falls outside threshold, add sticker img pixel
-                        greenscreened[gsRow][gsCol] = sticker[sRow][sCol];
+                        greenscreened[bgRow][bgCol] = sticker[sRow][sCol];
                 } else {
-                    greenscreened[gsRow][gsCol] = background[gsRow][gsCol]; // if sticker pixel is within green threshold, add background img pixel
+                    greenscreened[bgRow][bgCol] = background[bgRow][bgCol]; // if sticker pixel is within green threshold, add background img pixel
                 }
                 sCol++;
             } else {
-                greenscreened[gsRow][gsCol] = background[gsRow][gsCol]; // if outside bounds of sticker position, add background img pixel
+                greenscreened[bgRow][bgCol] = background[bgRow][bgCol]; // if outside bounds of sticker position, add background img pixel
             }
         }
-        if (isWithinStickerBounds(sticker.numRows(), stickerOriginX, gsRow)) { // If adding pixels from the sticker grid, increment sRow to loop
+        if (isWithinStickerBounds(sticker.numRows(), stickerOriginRow, bgRow)) { // If adding pixels from the sticker grid, increment sRow to loop
                 sRow++;
         }
     } 
 }
 
 /* Returns true if the row or col is within the bounds of where the sticker is to be overlaid */
-bool isWithinStickerBounds(int stickerSize, int boundary, int row) {
-    if (row >= boundary && row < stickerSize) {
+bool isWithinStickerBounds(int stickerEnd, int stickerStart, int row) {
+    if (row >= stickerStart && row < stickerEnd) {
         return true;
     }
     return false;
