@@ -29,7 +29,7 @@ Grid<int> doGreenScreen(Grid<int> &original);
 // void	doCompare(Grid<int>& original);
 void getStickerImg(GBufferedImage &img);
 void getStickerLocation(Grid<int> &original, int &row, int &col);
-bool isWithinStickerBounds(int stickerSize, int boundary, int row);
+bool isRowOrColWithinStickerBounds(int stickerLength, int start, int curr);
 void overlaySticker(Grid<int> &background, Grid<int> &greenscreened, Grid<int> &sticker, int threshold, int stickerOriginX, int stickerOriginY);
 bool isOutsideGreenThreshold(int pixel, int threshold);
 int assignEdgeDetectionColors(int threshold, Grid<int> &original, int r, int c);
@@ -356,10 +356,15 @@ bool convertStringToInts(Grid<int> &original, string str, int &row, int &col) {
 
 void overlaySticker(Grid<int> &background, Grid<int> &greenscreened, Grid<int> &sticker, int threshold, int stickerOriginRow, int stickerOriginCol) {
     int sRow = 0; // Sticker row
+
     for (int bgRow = 0; bgRow < background.numRows(); bgRow++) {
+
         int sCol = 0; // Sticker column
+        
         for (int bgCol = 0; bgCol < background.numCols(); bgCol++) {
-            if (isWithinStickerBounds(sticker.numRows(), stickerOriginRow, bgRow) && isWithinStickerBounds(sticker.numCols(), stickerOriginCol, bgCol)) {
+
+            if (isRowOrColWithinStickerBounds(sticker.numRows(), stickerOriginRow, bgRow) && isRowOrColWithinStickerBounds(sticker.numCols(), stickerOriginCol, bgCol)) {
+                
                 if (isOutsideGreenThreshold(sticker[sRow][sCol], threshold)) { // if sticker pixel falls outside threshold, add sticker img pixel
                         greenscreened[bgRow][bgCol] = sticker[sRow][sCol];
                 } else {
@@ -370,20 +375,32 @@ void overlaySticker(Grid<int> &background, Grid<int> &greenscreened, Grid<int> &
                 greenscreened[bgRow][bgCol] = background[bgRow][bgCol]; // if outside bounds of sticker position, add background img pixel
             }
         }
-        if (isWithinStickerBounds(sticker.numRows(), stickerOriginRow, bgRow)) { // If adding pixels from the sticker grid, increment sRow to loop
+
+        if (isRowOrColWithinStickerBounds(sticker.numRows(), stickerOriginRow, bgRow)) { // If adding pixels from the sticker grid, increment sRow to loop
                 sRow++;
         }
     } 
 }
 
 /* Returns true if the row or col is within the bounds of where the sticker is to be overlaid */
-bool isWithinStickerBounds(int stickerEnd, int stickerStart, int row) {
-    if (row >= stickerStart && row < stickerEnd) {
+
+bool isRowOrColWithinStickerBounds(int stickerLength, int start, int curr) {
+    int max = start + stickerLength - 1;
+
+    if (curr >= start && curr < max) {
         return true;
     }
     return false;
 }
 
+bool isColWithinStickerBounds(int numStickerRows, int startRow, int currRow) {
+    int maxRow = startRow + numStickerRows - 1;
+
+    if (currRow >= startRow && currRow < maxRow) {
+        return true;
+    }
+    return false;
+}
 /* Returns true if the pixel's shade of green falls outside of the threshold
  *
  * Compares the pixel's green values to the const GREEN green value.
