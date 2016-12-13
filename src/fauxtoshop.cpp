@@ -314,7 +314,9 @@ void getStickerLocation(Grid<int> &original, int &row, int &col) {
     while (true) {
         string location = getLine("Enter location to place image as \"(row,col)\" (or blank to use mouse): ");
         if (location == "") {
+            cout << "Now click the background image to place new image:" << endl;
             getMouseClickLocation(row, col);
+            cout << "You chose (" << row << "," << col << ")" << endl;
             break;
         } else {
             if (convertStringToInts(original, location, row, col)) {
