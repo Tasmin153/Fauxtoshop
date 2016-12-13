@@ -26,8 +26,8 @@ bool openImage(GWindow &gw, GBufferedImage &img);
 Grid<int> doScatter(Grid<int> &original);
 Grid<int> doEdgeDetection(Grid<int> &original);
 Grid<int> doGreenScreen(Grid<int> &original);
-// void	doCompare(Grid<int>& original);
-void getStickerImg(GBufferedImage &img);
+void	doCompare(GBufferedImage &img);
+void getSecondImg(GBufferedImage &img);
 void getStickerLocation(Grid<int> &original, int &row, int &col);
 bool isRowOrColWithinStickerBounds(int stickerLength, int start, int curr);
 void overlaySticker(Grid<int> &background, Grid<int> &greenscreened, Grid<int> &sticker, int threshold, int stickerOriginX, int stickerOriginY);
@@ -81,10 +81,6 @@ void doFauxtoshop(GWindow &gw, GBufferedImage &img) {
         gw.clear(); // Clears GWindow
         cout << "\n" <<endl;
         
-        // Compare to another image 
-        // GBufferedImage img2;
-        // openImageFromFilename(img2, "beyonce.jpg");
-        // img.countDiffPixels(img2);
 
     }
 }
@@ -98,8 +94,6 @@ bool openImage(GWindow &gw, GBufferedImage &img) {
         if (!getImage(img, gw)) {
             return false;
         }
-
-        cout << "Opening image file, may take a minute..." << endl;
 
         gw.setCanvasSize(img.getWidth(), img.getHeight()); // Resize GWindow to be same size as image
      
@@ -138,6 +132,7 @@ bool getImage(GBufferedImage &img, GWindow &gw) {
  * returns false.
  */
 bool openImageFromFilename(GBufferedImage& img, string filename) {
+    cout << "Opening image file, may take a minute..." << endl;
     try { img.load(filename); }
     catch (...) { return false; }
     return true;
@@ -162,16 +157,19 @@ void doFilter(GBufferedImage& img, int n) {
     Grid<int> filtered;
     switch(n) {
         case 1: filtered = doScatter(original);
+                img.fromGrid(filtered);
                 break;
         case 2: filtered = doEdgeDetection(original);
+                img.fromGrid(filtered);
                 break;
         case 3: filtered = doGreenScreen(original);
+                img.fromGrid(filtered);
                 break;
-	//case 4: doCompare(img);
+        case 4: doCompare(img);
+                break;
         default: cout << "You entered an invalid number" << endl;
                  break;
     }
-    img.fromGrid(filtered);
 }
 
 /* Applies the scatter filter to the image.
@@ -282,7 +280,7 @@ Grid<int> doGreenScreen(Grid<int>& original) {
     
     cout << "Now choose another file to add to your background image" << endl;
 
-    getStickerImg(sticker); // Open the file input by the user
+    getSecondImg(sticker); // Open the file input by the user
     Grid<int> stickerGrid = sticker.toGrid(); // Convert sticker image to Grid<int>
     int threshold = getThreshold("Now choose a tolerance threshold: ");
     getStickerLocation(original, stickerRow, stickerCol);
@@ -296,12 +294,11 @@ Grid<int> doGreenScreen(Grid<int>& original) {
 
 /* Prompts the user to enter an image filename. If valid, assigns image to img.
  * Continues to prompt in a loop until valid filename entered. */
-void getStickerImg(GBufferedImage &img) {
+void getSecondImg(GBufferedImage &img) {
     while (true) {
         string filename = getLine("Enter name of image file to open: ");
         // Attempt to open file. Breaks out of the loop if filename is valid. 
         if (openImageFromFilename(img, filename.c_str())) {
-            cout << "Opening image file. This may take a minute..." << endl;
             break;
         }
         cout << "Couldn't open that file. Please try again." << endl;
@@ -383,7 +380,6 @@ void overlaySticker(Grid<int> &background, Grid<int> &greenscreened, Grid<int> &
 }
 
 /* Returns true if the row or col is within the bounds of where the sticker is to be overlaid */
-
 bool isRowOrColWithinStickerBounds(int stickerLength, int start, int curr) {
     int max = start + stickerLength - 1;
 
@@ -444,6 +440,14 @@ void getMouseClickLocation(int &row, int &col) {
     } while (me.getEventType() != MOUSE_CLICKED);
     row = me.getY();
     col = me.getX();
+}
+
+/* Prints the number of pixels that differ between two images */
+void doCompare(GBufferedImage &img) {
+
+    GBufferedImage img2;
+    getSecondImg(img2);
+    cout << "These images differ in " << img.countDiffPixels(img2) << " pixel locations!" << endl;
 }
 
 /* OPTIONAL HELPER FUNCTION
