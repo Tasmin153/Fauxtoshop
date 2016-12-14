@@ -1,3 +1,3 @@
-# cs106b-fauxtoshop
+# Fauxtoshop
 
 A photo-editing application written in C++. Solution to Stanford CS106b assignment 1.
