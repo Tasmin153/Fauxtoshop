@@ -6,6 +6,6 @@ Scatter demo:
 ![GitHub Logo](/assets/fauxtoshop-scatter.gif)
 
 Green screen demo:
-![GitHub Logo](/assets/fauxtoshop1.gif)
+![GitHub Logo](/assets/fauxtoshop-green-screen.gif)
 
 
