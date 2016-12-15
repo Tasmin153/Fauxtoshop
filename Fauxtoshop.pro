@@ -294,3 +294,7 @@ exists($$PWD/lib/autograder/*.cpp) {
         copyToDestdir($$files($$PWD/*.h))
     }
 }
+
+DISTFILES += \
+    res/commodore.jpg \
+    res/vandy.jpg
