@@ -1,6 +1,6 @@
 # Fauxtoshop
 
-A photo-editing application written in C++. Solution to Stanford CS106b assignment 1.
+A C++ based implementation of common photo-editing algorithms including green screen, scatter blur effect, and edge detection.
 
 Scatter demo:
 ![GitHub Logo](/assets/fauxtoshop-scatter.gif)
