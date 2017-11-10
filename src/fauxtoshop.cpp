@@ -12,10 +12,10 @@
 
 using namespace std;
 
-static const int    WHITE = 0xFFFFFF;
-static const int    BLACK = 0x000000;
-static const int    GREEN = 0x00FF00;
-static const double PI    = 3.14159265;
+static const int WHITE = 0xFFFFFF;
+static const int BLACK = 0x000000;
+static const int GREEN = 0x00FF00;
+static const double PI = 3.14159265;
 
 void doFauxtoshop(GWindow &gw, GBufferedImage &img);
 bool getImage(GBufferedImage &img, GWindow &gw);
@@ -26,7 +26,7 @@ bool openImage(GWindow &gw, GBufferedImage &img);
 Grid<int> doScatter(Grid<int> &original);
 Grid<int> doEdgeDetection(Grid<int> &original);
 Grid<int> doGreenScreen(Grid<int> &original);
-void	doCompare(GBufferedImage &img);
+void doCompare(GBufferedImage &img);
 void getSecondImg(GBufferedImage &img);
 void getStickerLocation(Grid<int> &original, int &row, int &col);
 bool isRowOrColWithinStickerBounds(int stickerLength, int start, int curr);
@@ -46,8 +46,8 @@ bool saveImageToFilename(const GBufferedImage &img, string filename);
 void getMouseClickLocation(int &row, int &col);
 
 /* 
- * This main simply declares a GWindow and a GBufferedImage for use
- * throughout the program.  
+ * This main declares a GWindow and a GBufferedImage for use
+ * throughout the program and calls doFauxtoShop function.
  */
 int main() {
     GWindow gw;
@@ -59,7 +59,8 @@ int main() {
 }
 
 /*
- * TODO: rewrite this comment.
+ * Kicks off Fauxtoshop program
+ * with prompts to user.
  */
 void doFauxtoshop(GWindow &gw, GBufferedImage &img) {
 
@@ -68,7 +69,7 @@ void doFauxtoshop(GWindow &gw, GBufferedImage &img) {
         if (!openImage(gw, img)) { // Opens and displays image file. If user enters blank string, quits app.
             return; 
         }
-        
+
         pickFilter(img); // Prompts user to pick a filter
 
         while (true) { // Asks user if they would like to save image
@@ -272,6 +273,7 @@ int getThreshold(string prompt) {
     return threshold;
 } 
 
+// Implements green screen filter on grid<int> argument.
 Grid<int> doGreenScreen(Grid<int>& original) {
     Grid<int> greenscreened(original.numRows(), original.numCols());
     GBufferedImage sticker;
@@ -389,6 +391,7 @@ bool isRowOrColWithinStickerBounds(int stickerLength, int start, int curr) {
     return false;
 }
 
+/* Returns true if column is within bounds, false if not */
 bool isColWithinStickerBounds(int numStickerRows, int startRow, int currRow) {
     int maxRow = startRow + numStickerRows - 1;
 
@@ -450,12 +453,7 @@ void doCompare(GBufferedImage &img) {
     cout << "These images differ in " << img.countDiffPixels(img2) << " pixel locations!" << endl;
 }
 
-/* OPTIONAL HELPER FUNCTION
- *
- * This is only here in in case you decide to impelment a Gaussian
- * blur as an OPTIONAL extension (see the suggested extensions part
- * of the spec handout).
- *
+/* 
  * Takes a radius and computes a 1-dimensional Gaussian blur kernel
  * with that radius. The 1-dimensional kernel can be applied to a
  * 2-dimensional image in two separate passes: first pass goes over
